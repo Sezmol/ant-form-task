@@ -4,20 +4,24 @@ const loginSymbolRegExp = /^[\p{L}\p{N}_-]+$/u;
 
 const specialCharactersRegExp = /[.,!"№;%:?*()_+@#$^&\- ="'/|{}~<>[\]]/;
 
-const createValidator = (
-  regexp: RegExp,
+export const createValidator = (
+  condition: RegExp | boolean,
   message: string,
   restOptions?: Rule
 ): Rule => ({
-  validator: (_, value) =>
-    regexp.test(value) ? Promise.resolve() : Promise.reject(message),
+  validator: (_, value) => {
+    const isValid =
+      condition instanceof RegExp ? condition.test(value) : condition;
+
+    return isValid ? Promise.resolve() : Promise.reject(message);
+  },
   ...restOptions,
 });
 
-const requiredRule: Rule = {
+export const requiredRule = (message = "Обязательно для заполнения"): Rule => ({
   required: true,
-  message: "Обязательно для заполнения",
-};
+  message,
+});
 
 const minMaxRule = (min: number, max: number): Rule => {
   const regexp = new RegExp(`^.{${min},${max}}$`);
@@ -59,7 +63,7 @@ const noCyrillicValidator = createValidator(
 );
 
 export const passwordRule: Rule[] = [
-  requiredRule,
+  requiredRule(),
   minMaxRule(6, 20),
   digitValidator,
   uppercaseValidator,
@@ -69,7 +73,7 @@ export const passwordRule: Rule[] = [
 ];
 
 export const loginRule: Rule[] = [
-  requiredRule,
+  requiredRule(),
   minMaxRule(3, 50),
   loginSymbolRule,
 ];
