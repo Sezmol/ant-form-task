@@ -4,6 +4,10 @@ const loginSymbolRegExp = /^[\p{L}\p{N}_-]+$/u;
 
 const specialCharactersRegExp = /[.,!"№;%:?*()_+@#$^&\- ="'/|{}~<>[\]]/;
 
+const cityRegExp = /^[А-Яа-яЁё]+(?:[ -_][А-Яа-яЁё]+)*$/;
+
+const buildNumberRegExp = /^[А-Яа-яЁё0-9]+(?:[ -.][А-Яа-яЁё0-9]+)*$/;
+
 export const createValidator = (
   condition: RegExp | boolean,
   message: string,
@@ -32,10 +36,10 @@ const minMaxRule = (min: number, max: number): Rule => {
   );
 };
 
-const loginSymbolRule: Rule = {
-  message: "Допустимые символы: Кириллица, Латиница, цифры и символы -, _",
-  pattern: loginSymbolRegExp,
-};
+const loginSymbolRule: Rule = createValidator(
+  loginSymbolRegExp,
+  "Должно содержать только латинские буквы, цифры и символы подчеркивания"
+);
 
 const digitValidator = createValidator(
   /\d/,
@@ -61,6 +65,27 @@ const noCyrillicValidator = createValidator(
   /^[^а-яА-Я]/,
   "Строка не должна содержать кириллицу"
 );
+
+export const cityValidator = createValidator(
+  cityRegExp,
+  "Допустимые символы: Кириллица, пробел и символы -, _"
+);
+
+export const buildNumberValidator = createValidator(
+  buildNumberRegExp,
+  "Допустимые символы: Кириллица, пробел и символы -, ."
+);
+
+export const cityRule: Rule[] = [
+  requiredRule(),
+  minMaxRule(3, 100),
+  cityValidator,
+];
+
+export const cityRuleWithoutRequired: Rule[] = [
+  minMaxRule(3, 100),
+  cityValidator,
+];
 
 export const passwordRule: Rule[] = [
   requiredRule(),

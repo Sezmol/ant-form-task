@@ -1,16 +1,22 @@
 import type { FormProps } from "antd";
-import { Button, Form, Input, Select, Spin } from "antd";
+import { Button, Form, Input } from "antd";
 import {
+  buildNumberValidator,
+  cityRule,
+  cityRuleWithoutRequired,
   createValidator,
   loginRule,
   passwordRule,
   requiredRule,
 } from "./utils/validationRules";
 import "./App.css";
-import { getCountries } from "./api";
+import { getCountries, postNewCountry } from "./api";
 import useFetchData from "./hooks/useFetchData";
-import { Country } from "./types";
+import { SelectItemType } from "./types";
 import { useMemo } from "react";
+
+import CustomSelect from "./components/CustomSelect/CustomSelect";
+import ContactTypeList from "./components/ContactTypeList/ContactTypeList";
 
 type FieldType = {
   login?: string;
@@ -25,13 +31,13 @@ const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
 const App = () => {
   const {
     data: countries,
-    isLoading,
-    error,
-  } = useFetchData<Country[]>({
+    isLoading: isCountriesLoading,
+    error: errorCountries,
+  } = useFetchData<SelectItemType[]>({
     fetchFunc: getCountries,
   });
 
-  const selectOptions = useMemo(
+  const selectCountryOptions = useMemo(
     () =>
       countries
         ? countries.map(({ code, userLabel }) => ({
@@ -42,32 +48,11 @@ const App = () => {
     [countries]
   );
 
-  const dropdownRender = (options: React.ReactElement) => {
-    if (isLoading) {
-      return (
-        <div className="selectOptionsWrapper">
-          <Spin />
-          <div>Загрузка списка стран...</div>
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div className="selectOptionsWrapper">
-          При попытке загрузить список стран произошла ошибка
-        </div>
-      );
-    }
-
-    return options;
-  };
-
   return (
     <div className="app">
-      <Form layout="vertical" name="form" onFinish={onFinish} className="form">
+      <Form layout="vertical" name="user" onFinish={onFinish} className="form">
         <Form.Item validateFirst label="Логин" name="login" rules={loginRule}>
-          <Input />
+          <Input placeholder="Логин" />
         </Form.Item>
 
         <Form.Item
@@ -76,10 +61,11 @@ const App = () => {
           name="password"
           rules={passwordRule}
         >
-          <Input.Password />
+          <Input.Password placeholder="Пароль" />
         </Form.Item>
 
         <Form.Item
+          validateFirst
           name="confirm"
           label="Повторите пароль"
           dependencies={["password"]}
@@ -95,11 +81,68 @@ const App = () => {
             },
           ]}
         >
-          <Input.Password />
+          <Input.Password placeholder="Повторите пароль" />
         </Form.Item>
 
-        <Form.Item>
-          <Select options={selectOptions} dropdownRender={dropdownRender} />
+        <Form.Item
+          validateFirst
+          label="Страна"
+          name={["realAddress", "country"]}
+          rules={[requiredRule()]}
+        >
+          <CustomSelect
+            isLoading={isCountriesLoading}
+            isError={!!errorCountries}
+            selectProps={{
+              placeholder: "Выберите страну",
+              options: selectCountryOptions,
+            }}
+            modalProps={{
+              codeItemProps: {
+                label: "Код страны",
+                requiredRuleError: "Код страны не должен быть пустым",
+                placeholder: "Введите код страны",
+              },
+              userLabelItemProps: {
+                label: "Название страны",
+                requiredRuleError: "Название страны не должно быть пустым",
+                placeholder: "Введите страны название страны",
+              },
+              modalTitle: "Добавить новую страну",
+              fetchFunc: postNewCountry,
+            }}
+          />
+        </Form.Item>
+
+        <Form.Item
+          validateFirst
+          label="Город"
+          rules={cityRule}
+          name={["realAddress", "city"]}
+        >
+          <Input placeholder="Введите город" />
+        </Form.Item>
+
+        <Form.Item
+          validateFirst
+          label="Улица"
+          rules={cityRuleWithoutRequired}
+          name={["realAddress", "street"]}
+        >
+          <Input placeholder="Введите улицу" />
+        </Form.Item>
+
+        <Form.Item
+          validateFirst
+          label="Дом"
+          rules={[buildNumberValidator]}
+          name={["realAddress", "build_number"]}
+        >
+          <Input placeholder="Ввеедите номер дома" />
+        </Form.Item>
+
+        <Form.Item label="Контакты">
+          <ContactTypeList />
         </Form.Item>
 
         <Form.Item>

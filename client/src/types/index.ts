@@ -1,6 +1,8 @@
-export type CommonResponse<T> = {
+export type Method = "GET" | "POST" | "PUT" | "DELETE";
+
+export type CommonResponse<T, E = CommonError> = {
   data?: CommonData<T>;
-  error?: CommonError;
+  error?: E;
 };
 
 export interface CommonData<T> {
@@ -13,7 +15,9 @@ export interface CommonError {
   status: "error";
 }
 
-export interface Country {
+export interface SelectItemType {
   code: string;
   userLabel: string;
 }
+
+export type PostNewOptionError = CommonError & { field: "code" | "userLabel" };
